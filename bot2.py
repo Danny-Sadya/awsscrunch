@@ -53,55 +53,59 @@ class ScrunchScraper:
             self.authenticate()
             time.sleep(5)
             card_number = 0
-            for engagement_rate_arg in self.args['engagement_rate']:
-                for gender_arg in self.args['gender']:
+            for gender_arg in self.args['gender']:
+                for engagement_rate_arg in self.args['engagement_rate']:
                     topic_arg = self.args['topic']
                     print(topic_arg, gender_arg, engagement_rate_arg)
                     try:
                         page_num = 0
-                        while "Sorry, there is a problem with your connection." not in self.driver.page_source:
-                            print(f'Thread: {self.args["shift"]}, reload count: {page_num}')
-                            self.driver.get(f'https://app.scrunch.com/discover?topic={topic_arg}&gender={gender_arg}&engagement_rate={engagement_rate_arg}from={page_num * 25}&size=25')
-                            time.sleep(20)
-                            cards = self.get_cards()
-                            if len(cards) < 5:
-                                break
-                            j = 1
-                            button_shift = 0
-                            for _ in cards:
-                                card_number += 1
-                                print(f'Thread: {self.args["shift"]}, card number: {card_number}')
-                                try:
-                                    time.sleep(2)
-                                    email = self.get_email(button_shift)
-                                    # self.add_card_to_viewed(button_shift)
-                                    bio = self.get_bio(j)
-                                    self.open_card(button_shift)
-                                    soup = BeautifulSoup(self.driver.page_source, 'lxml')
-                                    name = self.get_name(soup)
-                                    links, followers = self.get_followers(soup)
-                                    average_engagement, average_engagement_rate = self.get_engagements(soup)
-                                    views = self.get_views(soup)
-                                    costs = self.get_estimated_cost_per_post(soup)
-                                    topics = self.get_topics(soup)
-                                    global_regions, countries, states, regions, cities = self.get_audience_locations(soup)
-                                    analysis = self.get_audience_analysis(soup)
-                                    audience_topics, audience_hashtags, audience_mentions = self.get_audience_interests(soup)
-                                    self.close_card()
+                        self.driver.get(f'https://app.scrunch.com/discover?engagement_rate={engagement_rate_arg}&topic={topic_arg}&gender={gender_arg}&from={page_num * 25}&size=25')
+                        while "Popular Topics" not in self.driver.page_source:
+                            try:
+                                self.driver.get(
+                                    f'https://app.scrunch.com/discover?topic={topic_arg}&gender={gender_arg}&engagement_rate={engagement_rate_arg}from={page_num * 25}&size=25')
+                                print(f'Thread: {self.args["shift"]}, reload count: {page_num}')
+                                time.sleep(10)
+                                cards = self.get_cards()
+                                if len(cards) < 5:
+                                    break
+                                j = 1
+                                button_shift = 0
+                                for _ in cards:
+                                    card_number += 1
+                                    print(f'Thread: {self.args["shift"]}, card number: {card_number}')
+                                    try:
+                                        time.sleep(2)
+                                        email = self.get_email(button_shift)
+                                        # self.add_card_to_viewed(button_shift)
+                                        bio = self.get_bio(j)
+                                        self.open_card(button_shift)
+                                        soup = BeautifulSoup(self.driver.page_source, 'lxml')
+                                        name = self.get_name(soup)
+                                        links, followers = self.get_followers(soup)
+                                        average_engagement, average_engagement_rate = self.get_engagements(soup)
+                                        views = self.get_views(soup)
+                                        costs = self.get_estimated_cost_per_post(soup)
+                                        topics = self.get_topics(soup)
+                                        global_regions, countries, states, regions, cities = self.get_audience_locations(soup)
+                                        analysis = self.get_audience_analysis(soup)
+                                        audience_topics, audience_hashtags, audience_mentions = self.get_audience_interests(soup)
+                                        self.close_card()
 
-                                    # input('Check smth')
-                                    results.append({'name': name, 'bio': bio, 'email': email, 'topics': topics, 'followers': followers, 'links': links,
-                                                    'average_engagement': average_engagement, 'average_engagement_rate': average_engagement_rate,
-                                                    'views': views, 'estimated_cost_per_post': costs, 'audience_global_regions': global_regions,
-                                                    'audience_countries': countries, 'audience_states': states, 'audience_regions': regions,
-                                                    'audience_cities': cities, 'audience_analysis': analysis, 'audience_topics': audience_topics,
-                                                    'audience_hashtags': audience_hashtags, 'audience_mentions': audience_mentions})
-                                except Exception as ex:
-                                    print(ex)
-                                finally:
-                                    button_shift += 1
-                                    j += 2
-                                    page_num += 1
+                                        # input('Check smth')
+                                        results.append({'name': name, 'bio': bio, 'email': email, 'topics': topics, 'followers': followers, 'links': links,
+                                                        'average_engagement': average_engagement, 'average_engagement_rate': average_engagement_rate,
+                                                        'views': views, 'estimated_cost_per_post': costs, 'audience_global_regions': global_regions,
+                                                        'audience_countries': countries, 'audience_states': states, 'audience_regions': regions,
+                                                        'audience_cities': cities, 'audience_analysis': analysis, 'audience_topics': audience_topics,
+                                                        'audience_hashtags': audience_hashtags, 'audience_mentions': audience_mentions})
+                                    except Exception as ex:
+                                        print(ex)
+                                    finally:
+                                        button_shift += 1
+                                        j += 2
+                            except:
+                                page_num += 1
                     except Exception as ex:
                         print(f'Global error in thread {self.args["shift"]}: {ex}' )
                 #with open('demo1.json', 'w') as f:

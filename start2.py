@@ -27,7 +27,7 @@ if __name__ == "__main__":
     #       'topic': ['fashion', 'travel', 'music', 'beauty'],
     #       'gender': parametres['gender']}
 
-    for i in range(0, 10):
+    for i in range(0, 1):
         topics = ['fashion', 'travel', 'music', 'beauty', 'relationships', 'travel', 'sport', 'design', 'sciences', 'cosplay']
         proc = Process(target=proc_executor, args=({'engagement_rate': parametres['engagement_rate'],
                                                       'topic': topics[i],
