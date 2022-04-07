@@ -51,24 +51,25 @@ class ScrunchScraper:
             self.authenticate()
             time.sleep(5)
             card_number = 0
-            for n in range(0, 1):
+            for n in range(0, 400):
                 try:
                     print(f'Thread: {self.shift}, reload count: {n}')
-                    self.driver.get(f'https://app.scrunch.com/discover?keywords=&lastPage=%2Fdiscover&is_not_in_list=true&from={self.shift * 100}&size=100')
+                    self.driver.get(f'https://app.scrunch.com/discover?keywords=&lastPage=%2Fdiscover&is_not_in_list=true&from={self.shift * 25}&size=25')
                     time.sleep(1)
                     cards = self.get_cards()
-                    if len(cards) < 50:
+                    if len(cards) < 5:
                         break
                     j = 1
-                    for card in cards:
+                    button_shift = 0
+                    for _ in cards:
                         card_number += 1
                         print(f'Thread: {self.shift}, card number: {card_number}')
                         try:
                             time.sleep(1)
-                            email = self.get_email(j)
-                            self.add_card_to_viewed(j)
+                            email = self.get_email(button_shift)
+                            self.add_card_to_viewed(button_shift)
                             bio = self.get_bio(j)
-                            self.open_card(card)
+                            self.open_card(button_shift)
                             soup = BeautifulSoup(self.driver.page_source, 'lxml')
                             name = self.get_name(soup)
                             links, followers = self.get_followers(soup)
@@ -90,7 +91,11 @@ class ScrunchScraper:
                                         'audience_hashtags': audience_hashtags, 'audience_mentions': audience_mentions})
                         except Exception as ex:
                             print(ex)
+                            with open('error_page.html', 'w', encoding='utf-8') as f:
+                                f.write(self.driver.page_source)
+                                input()
                         finally:
+                            button_shift += 1
                             j += 2
                 except Exception as ex:
                     print(f'Global error in thread {self.shift}: {ex}' )
@@ -110,16 +115,32 @@ class ScrunchScraper:
             return
 
     def add_card_to_viewed(self, i):
-        button = self.driver.find_elements(By.XPATH, "//button[@class='MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall']")[i-1]
-        button.click()
-        time.sleep(0.5)
+        print('adding card to viewed')
+        # block = self.driver.find_elements(By.XPATH, '//div[@class="jss157"]')[i]
+        self.driver.execute_script(f"document.getElementsByClassName('MuiTableRow-root')[{i+1}].getElementsByClassName('MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall')[0].click()")
+        # button = self.driver.find_elements(By.XPATH, '//tr[@class="MuiTableRow-root"]')[i].find_elements(By.XPATH, "//button[@class='MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall']")[0]
+        # while True:
+        #     try:
+        #         button.click()
+        #         time.sleep(1)
+        #     except:
+        #         break
+        WebDriverWait(self.driver, 5).until(
+            EC.text_to_be_present_in_element((By.TAG_NAME, 'body'), 'viewed')
+        )
         button = self.driver.find_elements(By.XPATH, '//input[@type="checkbox"]')[-1]
         button.click()
-        self.driver.find_element(By.XPATH, "//div[@style='z-index: -1; position: fixed; inset: 0px; background-color: transparent; -webkit-tap-highlight-color: transparent;']").click()
+        time.sleep(0.2)
+        # self.driver.find_element(By.XPATH, "//div[@style='z-index: -1; position: fixed; inset: 0px; background-color: transparent; -webkit-tap-highlight-color: transparent;']").click()
+        self.driver.execute_script("return document.getElementsByClassName('MuiPopover-root')[1].remove();")
 
     def get_email(self, i):
-        button = self.driver.find_elements(By.XPATH, "//button[@class='MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall']")[i]
-        button.click()
+        print('getting email')
+        # block = self.driver.find_elements(By.XPATH, '//div[@class="jss157"]')[i]
+        # button = card.find_elements(By.XPATH, "//button[@class='MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall']")[1]
+        # button.click()
+        self.driver.execute_script(
+            f"document.getElementsByClassName('MuiTableRow-root')[{i + 1}].getElementsByClassName('MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall')[1].click()")
         time.sleep(0.2)
         email_button = self.driver.find_element(By.XPATH, '//div[@class="MuiPaper-root MuiPopover-paper MuiPaper-elevation8 MuiPaper-rounded"]')
         email = email_button.text
@@ -131,21 +152,30 @@ class ScrunchScraper:
         bio = self.driver.find_elements(By.XPATH, "//p[@class='MuiTypography-root MuiTypography-body2']")[i // 2].text
         return bio
 
-    def open_card(self, card):
-        card.click()
-        WebDriverWait(self.driver, 20).until(
-            EC.presence_of_element_located((By.XPATH, '//h5[@class="MuiTypography-root MuiTypography-h5"]'))
-        )
+    def open_card(self, i):
+        print('opening card')
+        # card.click()
+        while True:
+            try:
+                self.driver.execute_script(f"document.getElementsByClassName('MuiTableRow-root')[{i + 1}].childNodes[3].click()")
+                WebDriverWait(self.driver, 20).until(
+                    EC.presence_of_element_located((By.XPATH, '//h5[@class="MuiTypography-root MuiTypography-h5"]'))
+                )
+                break
+            except:
+                pass
 
     def close_card(self):
         button = WebDriverWait(self.driver, 15).until(
             EC.presence_of_all_elements_located((By.XPATH, "//button[@class='MuiButtonBase-root MuiIconButton-root']"))
         )
         button[-1].click()
+        # self.driver.execute_script("return document.getElementsByClassName('ReactModal__Overlay ReactModal__Overlay--after-open slide-pane__overlay ')[0].remove()")
 
         # self.driver.find_elements(By.XPATH, "//button[@class='MuiButtonBase-root MuiIconButton-root']")[14].click()
         # opened_card = self.get_element('//div[@class="ReactModalPortal"]', element_number=-1)
         # soup = BeautifulSoup(self.driver.page_source, 'lxml')
+
 
     def get_cards(self):
         container = self.get_element('//tbody[@class="MuiTableBody-root"]')
@@ -162,9 +192,6 @@ class ScrunchScraper:
         self.paste_text(xpath='//input[@class="MuiInputBase-input MuiInput-input MuiInputBase-inputAdornedEnd"]',
                         value='Mangust1!')
         self.click_button(xpath="//button[@type='submit']")
-
-    def setup_csv(self):
-        self.csv_file_name = f'results_{randint(1000, 10000)}.csv'
 
     def get_element(self, xpath, element_number=0):
         element = WebDriverWait(self.driver, 15).until(
