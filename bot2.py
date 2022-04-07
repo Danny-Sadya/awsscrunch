@@ -53,16 +53,16 @@ class ScrunchScraper:
             self.authenticate()
             time.sleep(5)
             card_number = 0
-            for topic_arg in self.args['topic']:
+            for engagement_rate_arg in self.args['engagement_rate']:
                 for gender_arg in self.args['gender']:
-                    engagement_rate_arg = self.args['engagement_rate']
+                    topic_arg = self.args['topic']
                     print(topic_arg, gender_arg, engagement_rate_arg)
                     try:
                         page_num = 0
                         while "Sorry, there is a problem with your connection." not in self.driver.page_source:
                             print(f'Thread: {self.args["shift"]}, reload count: {page_num}')
                             self.driver.get(f'https://app.scrunch.com/discover?topic={topic_arg}&gender={gender_arg}&engagement_rate={engagement_rate_arg}from={page_num * 25}&size=25')
-                            time.sleep(10)
+                            time.sleep(20)
                             cards = self.get_cards()
                             if len(cards) < 5:
                                 break
@@ -72,7 +72,7 @@ class ScrunchScraper:
                                 card_number += 1
                                 print(f'Thread: {self.args["shift"]}, card number: {card_number}')
                                 try:
-                                    time.sleep(1)
+                                    time.sleep(2)
                                     email = self.get_email(button_shift)
                                     # self.add_card_to_viewed(button_shift)
                                     bio = self.get_bio(j)
@@ -120,7 +120,6 @@ class ScrunchScraper:
             return
 
     def add_card_to_viewed(self, i):
-        print('adding card to viewed')
         # block = self.driver.find_elements(By.XPATH, '//div[@class="jss157"]')[i]
         self.driver.execute_script(f"document.getElementsByClassName('MuiTableRow-root')[{i+1}].getElementsByClassName('MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall')[0].click()")
         # button = self.driver.find_elements(By.XPATH, '//tr[@class="MuiTableRow-root"]')[i].find_elements(By.XPATH, "//button[@class='MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall']")[0]
@@ -140,7 +139,6 @@ class ScrunchScraper:
         self.driver.execute_script("return document.getElementsByClassName('MuiPopover-root')[1].remove();")
 
     def get_email(self, i):
-        print('getting email')
         # block = self.driver.find_elements(By.XPATH, '//div[@class="jss157"]')[i]
         # button = card.find_elements(By.XPATH, "//button[@class='MuiButtonBase-root MuiIconButton-root MuiIconButton-sizeSmall']")[1]
         # button.click()
@@ -158,7 +156,6 @@ class ScrunchScraper:
         return bio
 
     def open_card(self, i):
-        print('opening card')
         # card.click()
         while True:
             try:
