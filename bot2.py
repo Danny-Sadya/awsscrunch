@@ -29,6 +29,32 @@ class ScrunchScraper:
                         'Topics', 'Estimated Costs Per Post', 'Audience Topics', 'Audience Hashtags', 'Audience Mentions',
                         'Global Regions', 'Countries', 'States', 'Regions', 'Cities/Towns/Suburbs', 'Audiene analysis']
         self.csv_file_name = None
+        self.args = dargs
+        dict_keys = {'name': '',
+                     'bio': '',
+                     'email': '',
+                     'topics': '',
+                     'followers': '',
+                     'links': '',
+                     'average_engagement': '',
+                     'average_engagement_rate': '',
+                     'views': '',
+                     'estimated_cost_per_post': '',
+                     'audience_global_regions': '',
+                     'audience_countries': '',
+                     'audience_states': '',
+                     'audience_regions': '',
+                     'audience_cities': '',
+                     'audience_analysis': '',
+                     'audience_topics': '',
+                     'audience_hashtags': '',
+                     'audience_mentions': ''}
+        self.keys = dict_keys.keys()
+        if not os.path.exists(f'Result{self.args["shift"]}.csv'):
+            print(self.keys)
+            with open(f'Result{self.args["shift"]}.csv', 'w', encoding='utf-8') as f:
+                dict_writer = csv.DictWriter(f, self.keys)
+                dict_writer.writeheader()
 
         # self.shift = shift
 
@@ -43,7 +69,6 @@ class ScrunchScraper:
         options.add_experimental_option('useAutomationExtension', False)
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         self.driver.set_page_load_timeout(20)
-        self.args = dargs
         print(self.args)
 
     def run(self):
@@ -99,22 +124,22 @@ class ScrunchScraper:
                                                         'audience_countries': countries, 'audience_states': states, 'audience_regions': regions,
                                                         'audience_cities': cities, 'audience_analysis': analysis, 'audience_topics': audience_topics,
                                                         'audience_hashtags': audience_hashtags, 'audience_mentions': audience_mentions})
+
+                                        with open(f'Result{self.args["shift"]}.csv', 'a', newline='',
+                                                  encoding='utf-8') as output_file:
+                                            dict_writer = csv.DictWriter(output_file, self.keys)
+                                            dict_writer.writerow(result)
                                     except Exception as ex:
                                         print(ex)
                                     finally:
                                         button_shift += 1
                                         j += 2
-                            except:
+                            except Exception as ex:
+                                print(ex)
+                            finally:
                                 page_num += 1
                     except Exception as ex:
                         print(f'Global error in thread {self.args["shift"]}: {ex}' )
-                #with open('demo1.json', 'w') as f:
-                #    json.dump(results, f, indent=4)
-            keys = results[0].keys()
-            with open(f'Result{self.args["shift"]}.csv', 'w', newline='', encoding='utf-8') as output_file:
-                dict_writer = csv.DictWriter(output_file, keys)
-                dict_writer.writeheader()
-                dict_writer.writerows(results)
 
         except Exception as ex:
             print(f'Error in running {ex}')
